@@ -1,0 +1,48 @@
+model {
+      for (i in 1:N)  {
+          for(t in 1:Time) {
+            # --- Model the growth curve
+               y[i,t] ~ dnorm(muy[i,t], pre_sig2)
+               muy[i,t] <- LS[i,1]+(t-1)*LS[i,2]
+               #log-likelihood
+               loglik[i,t] <- logdensity.norm(y[i,t], muy[i,t], pre_sig2)
+			
+          }
+
+        LS[i,1:2]  ~ dmnorm(muLS[1:2], Inv_cov[1:2,1:2])
+
+      }
+
+      ########################
+      # prior specification
+      ########################
+
+      # --------- pre_sig2 ---------
+      pre_sig2 ~ dgamma(0.001, 0.001)
+      sig2 <- 1/pre_sig2
+
+      # --------- muLS ---------
+      # Intercept
+      muLS[1] ~ dnorm(0, 0.001)
+
+      # Slope
+      muLS[2] ~ dnorm(0, 0.001)
+
+      # --------- Inv_cov ---------
+      Inv_cov[1:2,1:2]~dwish(R[1:2,1:2], 2)
+      Cov_b <- inverse(Inv_cov[1:2,1:2])
+      R[1,1]<-1
+      R[2,2]<-1
+      R[2,1]<-R[1,2]
+      R[1,2]<-0
+
+      ## --- Reorganize model parameters
+
+      par[1]   <- muLS[1]
+      par[2]   <- muLS[2]
+      par[3]   <- Cov_b[1,1]
+      par[4]   <- Cov_b[1,2]
+      par[5]   <- Cov_b[2,2]
+      par[6]   <- sig2
+
+} # model
